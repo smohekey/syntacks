@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 name = "syntacks"
 readme = "README.md"
 repository = "https://github.com/smohekey/syntax"
-version = "0.1.0-alpha0"
+version = "0.1.0-alpha0.1"
 
 [dependencies]
 async-stream = "0.3.5"
