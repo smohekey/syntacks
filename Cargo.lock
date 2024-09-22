@@ -183,7 +183,7 @@ dependencies = [
 
 [[package]]
 name = "syntacks"
-version = "0.1.0-alpha0"
+version = "0.1.0-alpha0.1"
 dependencies = [
  "async-stream",
  "futures",
