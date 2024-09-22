@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-alpha0.2](https://github.com/smohekey/syntacks/compare/v0.1.0-alpha0.1...v0.1.0-alpha0.2) - 2024-09-22
+
+### Other
+
+- Fixed url in build badge.
+- Merge branch 'main' of https://github.com/smohekey/syntacks
+- Added dependabot and an additional badge
+
 ## [0.1.0-alpha0.1](https://github.com/smohekey/syntacks/compare/v0.1.0-alpha0...v0.1.0-alpha0.1) - 2024-09-22
 
 ### Fixed
