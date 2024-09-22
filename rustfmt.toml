@@ -1,0 +1,9 @@
+tab_spaces = 2
+#chain_width = 0
+empty_item_single_line = false
+fn_args_layout = "Tall"
+hard_tabs = true
+max_width = 160
+newline_style = "Unix"
+reorder_imports = true
+use_field_init_shorthand = true
