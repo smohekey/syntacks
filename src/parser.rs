@@ -1,8 +1,8 @@
 use std::future::Future;
 
-use crate::{Error, Input, Parsed};
+use crate::{Error, Input, Output};
 
-pub type ParserResult<'src, I, O> = Result<Parsed<'src, I, O>, Error<'src, <I as Input<'src>>::Source>>;
+pub type ParserResult<'src, I, O> = Result<Output<'src, I, O>, Error<'src, <I as Input<'src>>::Source>>;
 
 pub trait Parser<'src, I, O>
 where

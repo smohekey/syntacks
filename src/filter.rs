@@ -39,7 +39,7 @@ where
 			.parser
 			.parse(input)
 			.iter()
-			.filter(|v| (self.predicate)(&v.output))
+			.filter(|output| (self.predicate)(&output.value))
 			.cloned()
 			.fold(Err(Error::NoMatch), |_, v| Ok(v))
 	}
@@ -51,7 +51,7 @@ where
 			.parse_async(input)
 			.await
 			.iter()
-			.filter(|v| (self.predicate)(&v.output))
+			.filter(|output| (self.predicate)(&output.value))
 			.cloned()
 			.fold(Err(Error::NoMatch), |_, v| Ok(v))
 	}

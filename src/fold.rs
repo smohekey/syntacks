@@ -4,11 +4,7 @@ use std::{
 	ops::{Bound, RangeBounds},
 };
 
-use futures::stream::repeat as repeat_async;
-
-use futures::StreamExt;
-
-use crate::{async_utils::try_for_each, Error, Input, Parsed, Parser, SourceSpan};
+use crate::{Error, Input, Output, Parser, SourceSpan};
 
 pub fn fold<'src, I, O1, O2, P, R, FInit, FAccumulate>(
 	parser: P,
@@ -56,7 +52,7 @@ where
 	parser: &'a mut P,
 	accumulate: &'a mut F,
 	source_span: SourceSpan<'src, I::Source>,
-	output: O2,
+	value: O2,
 	remaining: I,
 	_phantom: PhantomData<&'src O1>,
 }
@@ -68,28 +64,9 @@ where
 	F: FnMut(&mut O2, O1),
 {
 	fn parse(&mut self) -> Result<(), Error<'src, I::Source>> {
-		let Parsed {
-			source_span,
-			output,
-			remaining,
-		} = self.parser.parse(self.remaining.clone())?;
+		let Output { source_span, value, remaining } = self.parser.parse(self.remaining.clone())?;
 
-		(self.accumulate)(&mut self.output, output);
-
-		self.remaining = remaining;
-		self.source_span += source_span;
-
-		Ok::<_, Error<'src, I::Source>>(())
-	}
-
-	async fn parse_async(&mut self) -> Result<(), Error<'src, I::Source>> {
-		let Parsed {
-			source_span,
-			output,
-			remaining,
-		} = self.parser.parse_async(self.remaining.clone()).await?;
-
-		(self.accumulate)(&mut self.output, output);
+		(self.accumulate)(&mut self.value, value);
 
 		self.remaining = remaining;
 		self.source_span += source_span;
@@ -111,7 +88,7 @@ where
 			parser: &mut self.parser,
 			accumulate: &mut self.accumulate,
 			source_span: input.source_span().start(),
-			output: (self.init)(),
+			value: (self.init)(),
 			remaining: input,
 			_phantom: PhantomData::<&'src O1>,
 		};
@@ -119,31 +96,55 @@ where
 		repeat(()).take(range_to_minimum(&self.range)).try_for_each(|_| state.parse())?;
 		repeat(()).take(range_to_maximum(&self.range)).try_for_each(|_| state.parse())?;
 
-		Ok(Parsed {
+		Ok(Output {
 			source_span: state.source_span,
-			output: state.output,
+			value: state.value,
 			remaining: state.remaining,
 		})
 	}
 
 	async fn parse_async(&mut self, input: I) -> crate::ParserResult<'src, I, O2> {
-		let mut state: State<'src, '_, I, _, O2, P, FAccumulate> = State {
-			parser: &mut self.parser,
-			accumulate: &mut self.accumulate,
-			source_span: input.source_span().start(),
-			output: (self.init)(),
-			remaining: input,
-			_phantom: PhantomData::<&'src O1>,
-		};
+		let mut count = 0;
+		let mut value = (self.init)();
+		let mut source_span = input.source_span().start();
+		let mut remaining = input;
 
-		try_for_each(repeat_async(()).take(range_to_minimum(&self.range)), |_| state.parse_async()).await?;
-		try_for_each(repeat_async(()).take(range_to_maximum(&self.range)), |_| state.parse_async()).await?;
+		let minimum = range_to_minimum(&self.range);
 
-		Ok(Parsed {
-			source_span: state.source_span,
-			output: state.output,
-			remaining: state.remaining,
-		})
+		for _ in 0..minimum {
+			let Output {
+				source_span: inner_source_span,
+				value: inner_value,
+				remaining: inner_remaining,
+			} = self.parser.parse_async(remaining).await?;
+
+			(self.accumulate)(&mut value, inner_value);
+
+			remaining = inner_remaining;
+			source_span += inner_source_span;
+
+			count += 1;
+		}
+
+		let maximum = range_to_maximum(&self.range);
+
+		for _ in count..=maximum {
+			if let Ok(Output {
+				source_span: inner_source_span,
+				value: inner_value,
+				remaining: inner_remaining,
+			}) = self.parser.parse_async(remaining.clone()).await
+			{
+				(self.accumulate)(&mut value, inner_value);
+
+				remaining = inner_remaining;
+				source_span += inner_source_span;
+			} else {
+				break;
+			}
+		}
+
+		Ok(Output { source_span, value, remaining })
 	}
 }
 

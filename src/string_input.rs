@@ -1,6 +1,6 @@
 use std::str::from_utf8;
 
-use crate::{Error, Input, Parsed, SourceSpan, StringSource};
+use crate::{Error, Input, Output, SourceSpan, StringSource};
 
 #[derive(Clone, Copy, Debug)]
 pub struct StringInput<'src> {
@@ -29,7 +29,7 @@ impl<'src> Input<'src> for StringInput<'src> {
 		SourceSpan::new(self.source, self.byte_start, self.byte_end)
 	}
 
-	fn next(self) -> Result<Parsed<'src, Self, Self::Item>, Error<'src, Self::Source>> {
+	fn next(self) -> Result<Output<'src, Self, Self::Item>, Error<'src, Self::Source>> {
 		if self.byte_start <= self.byte_end {
 			if let Some(bytes) = self.source.bytes().get(self.byte_start..self.byte_end) {
 				return from_utf8(bytes).map_err(|error| error.into()).and_then(|string| {
@@ -39,8 +39,8 @@ impl<'src> Input<'src> for StringInput<'src> {
 						.map(|next| {
 							let len = next.len_utf8();
 
-							Parsed {
-								output: next,
+							Output {
+								value: next,
 								source_span: SourceSpan::new(self.source, self.byte_start, self.byte_start + len),
 								remaining: Self {
 									source: self.source,
@@ -57,7 +57,7 @@ impl<'src> Input<'src> for StringInput<'src> {
 		Err(Error::EndOfInput)
 	}
 
-	async fn next_async(self) -> Result<Parsed<'src, Self, Self::Item>, Error<'src, Self::Source>> {
+	async fn next_async(self) -> Result<Output<'src, Self, Self::Item>, Error<'src, Self::Source>> {
 		self.next()
 	}
 }
