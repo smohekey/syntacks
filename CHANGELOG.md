@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Other
 
 - Merge pull request [#3](https://github.com/smohekey/syntacks/pull/3) from smohekey/fix_readme
+- release
 
 ## [0.1.0-alpha0](https://github.com/smohekey/syntacks/releases/tag/v0.1.0-alpha0) - 2024-09-22
 
